@@ -107,10 +107,18 @@ public class MirrorNodeClientImpl implements MirrorNodeClient {
     public Optional<TransactionInfo> queryTransaction(@NonNull final String transactionId) throws HieroException {
         Objects.requireNonNull(transactionId, "transactionId must not be null");
         final JsonNode jsonNode = doGetCall("/api/v1/transactions/" + transactionId);
+        TransactionInfo transactionInfo;
+
         if (jsonNode == null || !jsonNode.fieldNames().hasNext()) {
             return Optional.empty();
         }
-        return Optional.of(new TransactionInfo(transactionId));
+        try {
+            transactionInfo = objectMapper.treeToValue(jsonNode, TransactionInfo.class);
+            return Optional.ofNullable(transactionInfo);
+        } catch (JsonProcessingException jsonProcessingException) {
+            System.err.println("Error parsing transaction data: " + jsonProcessingException.getMessage());
+            return Optional.empty();
+        }
     }
 
     @Override
